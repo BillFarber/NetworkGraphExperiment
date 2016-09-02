@@ -6,7 +6,7 @@ declare option xdmp:mapping "false";
   "<!DOCTYPE html>",
   <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-      <title>Network Display Experiments</title>
+      <title>Network Display Experiment</title>
       <style type="text/css">{'
         #cytoscape-container {
             max-width: 800px;
