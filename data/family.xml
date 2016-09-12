@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:billfarber="http://billfarber.org/family/"
+    xmlns:foaf="http://xmlns.com/foaf/0.1/"
+    xmlns:rel="http://purl.org/vocab/relationship/">
+    <foaf:Person rdf:nodeID="ian">
+        <foaf:name>Carl Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:barlcarber@yahoo.com" />
+        <foaf:gender>Male</foaf:gender>
+        <foaf:title>Mr</foaf:title>
+        <foaf:givenname>Carl</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf>Stewart Barber</rel:childOf>
+    </foaf:Person>
+
+
+    <foaf:Person rdf:about="http://billfarber.org/family/Phil Barber">
+        <foaf:name>Phil Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:phil.barber@marklogic.com" />
+        <foaf:gender>Male</foaf:gender>
+        <foaf:title>Mr</foaf:title>
+        <foaf:givenname>Philip</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf rdf:nodeID="ian"/>
+    </foaf:Person>
+
+
+    <foaf:Person rdf:about="http://billfarber.org/family/Shari Barber">
+        <foaf:name>Shari Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:billfarber@yahoo.com" />
+        <foaf:gender>female</foaf:gender>
+        <foaf:title>Mrs</foaf:title>
+        <foaf:givenname>Shari</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf>Phillip Norris</rel:childOf>
+    </foaf:Person>
+</rdf:RDF>
