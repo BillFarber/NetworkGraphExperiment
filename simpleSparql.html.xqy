@@ -12,6 +12,13 @@ let $rootTriples := sem:sparql('
   }
 ')
 
+let $people := sem:sparql('
+  SELECT ?person
+  WHERE { 
+    ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person>
+  }
+')
+
 return
 (
   xdmp:set-response-content-type("text/html"),
@@ -30,6 +37,15 @@ return
                 {
                     for $triple in $rootTriples
                     return <tr><td>{map:get($triple,"pred")}</td><td>{map:get($triple,"obj")}</td></tr>
+                }
+            </table>
+          </div>
+          <p><b>People:</b></p>
+          <div>
+            <table>
+                {
+                    for $person in $people
+                    return <tr><td>{map:get($person,"person")}</td></tr>
                 }
             </table>
           </div>
