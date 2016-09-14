@@ -29,6 +29,22 @@ let $personNodeInsertScript := fn:concat("
               }
             });
             layout.run();
+               cy.elements().qtip({ 
+                  content: function(){ return 'Example qTip on ele ' + this.id() }, 
+                  position: { 
+                      my: 'top center', 
+                      at: 'bottom center' 
+                  }, 
+                  style: { 
+                      classes: 'qtip-bootstrap', 
+                      tip: { 
+                          width: 16, 
+                          height: 8 
+                  }},
+                  show: {
+                    event: 'mouseover'
+                  }
+              }); 
           ")
 
 return
@@ -38,6 +54,7 @@ return
   <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
       <title>Person Nodes</title>
+      <link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.css" />
       <style type="text/css">{'
         #cytoscape-container {
             max-width: 800px;
@@ -50,7 +67,10 @@ return
     <body>
         <div>
           <div id="cytoscape-container"></div>
+          <script src="lib/jquery-1.7.1.min.js"></script>
+          <script src="lib/jquery.qtip.min.js"></script>
           <script src="lib/cytoscape.js"></script>
+          <script src="lib/cytoscape-qtip.js"></script>
           <script src="emptyData.js"></script>
           <script>{$personNodeInsertScript}</script>
         </div>
