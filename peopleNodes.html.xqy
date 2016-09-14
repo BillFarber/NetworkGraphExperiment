@@ -5,16 +5,17 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 declare option xdmp:mapping "false";
 
 let $people := sem:sparql('
-  SELECT ?person ?name
+  SELECT ?person ?name ?mbox
   WHERE {
     ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
-    ?person <http://xmlns.com/foaf/0.1/name> ?name
+    ?person <http://xmlns.com/foaf/0.1/name> ?name .
+    ?person <http://xmlns.com/foaf/0.1/mbox> ?mbox
   }
 ')
 
 let $personNodeStrings :=
     for $person in $people
-    return fn:concat("{ group: 'nodes', data: { id: '", map:get($person,"name"), "', ring: 2 } }")
+    return fn:concat("{ group: 'nodes', data: { id: '", map:get($person,"name"), "', ring: 2, tip: '", map:get($person,"mbox"), "' } }")
 let $personNodeArray := fn:string-join($personNodeStrings, ",")
 let $personNodeInsertScript := fn:concat("
             cy.add([", $personNodeArray, "]);
@@ -30,17 +31,20 @@ let $personNodeInsertScript := fn:concat("
             });
             layout.run();
                cy.elements().qtip({ 
-                  content: function(){ return 'Example qTip on ele ' + this.id() }, 
+                  content: function(){ return this._private.data.tip }, 
                   position: { 
                       my: 'top center', 
                       at: 'bottom center' 
                   }, 
                   style: { 
-                      classes: 'qtip-bootstrap', 
+                      classes: 'qtip-green qtip-rounded', 
                       tip: { 
                           width: 16, 
                           height: 8 
                   }},
+                  hide: {
+                    event: 'mouseout'
+                  },
                   show: {
                     event: 'mouseover'
                   }
