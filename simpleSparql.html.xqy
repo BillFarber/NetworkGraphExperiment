@@ -13,9 +13,10 @@ let $rootTriples := sem:sparql('
 ')
 
 let $people := sem:sparql('
-  SELECT ?person
-  WHERE { 
-    ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person>
+  SELECT ?person ?name
+  WHERE {
+    ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+    ?person <http://xmlns.com/foaf/0.1/name> ?name
   }
 ')
 
@@ -45,7 +46,7 @@ return
             <table>
                 {
                     for $person in $people
-                    return <tr><td>{map:get($person,"person")}</td></tr>
+                    return <tr><td>{map:get($person,"person")}</td><td>{map:get($person,"name")}</td></tr>
                 }
             </table>
           </div>
