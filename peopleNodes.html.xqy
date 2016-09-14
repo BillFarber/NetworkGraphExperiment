@@ -71,7 +71,7 @@ return
           <script src="lib/jquery.qtip.min.js"></script>
           <script src="lib/cytoscape.js"></script>
           <script src="lib/cytoscape-qtip.js"></script>
-          <script src="emptyData.js"></script>
+          <script src="js/emptyGraph.js"></script>
           <script>{$personNodeInsertScript}</script>
         </div>
     </body>

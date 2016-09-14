@@ -21,7 +21,7 @@ declare option xdmp:mapping "false";
           <p>Cytoscape</p>
           <div id="cytoscape-container"></div>
           <script src="lib/cytoscape.js"></script>
-          <script src="data.js"></script>
+          <script src="js/staticGraph.js"></script>
           <script>{"
             cy.add([
                 { group: 'nodes', data: { id: 'Jacob', ring: 3 } },
