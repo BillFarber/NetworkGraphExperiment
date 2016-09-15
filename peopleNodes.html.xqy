@@ -4,21 +4,52 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 
 declare option xdmp:mapping "false";
 
-let $people := sem:sparql('
-  SELECT ?person ?name ?mbox
+let $personBindings := sem:sparql('
+  SELECT ?personId ?name ?mbox
   WHERE {
-    ?person <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
-    ?person <http://xmlns.com/foaf/0.1/name> ?name .
-    ?person <http://xmlns.com/foaf/0.1/mbox> ?mbox
+    ?personId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+    ?personId <http://xmlns.com/foaf/0.1/name> ?name .
+    ?personId <http://xmlns.com/foaf/0.1/mbox> ?mbox
   }
 ')
 
+let $people := map:map()
+let $_ :=
+    for $personBinding in $personBindings
+    let $personId := map:get($personBinding,"personId")
+    let $person := map:map()
+    let $_ := map:put($person, "name", map:get($personBinding,"name"))
+    let $_ := map:put($person, "mbox", map:get($personBinding,"mbox"))
+
+    let $bindings := map:map()
+    let $_ := map:put($bindings, "personId", $personId)
+    let $parents := sem:sparql(
+      '
+        SELECT ?parentId ?name
+        WHERE { 
+          ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
+          ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+        }
+      ',
+      $bindings
+    )
+    let $_ :=
+        if (xdmp:describe($parents) = "()") then
+            ()
+        else map:put($person, "parents", map:get($parents, "parentId"))
+
+    return map:put($people, $personId, $person)
+let $_ := xdmp:log(("$people",$people))
+
 let $personNodeStrings :=
-    for $person in $people
-    return fn:concat("{ group: 'nodes', data: { id: '", map:get($person,"name"), "', ring: 2, tip: '", map:get($person,"mbox"), "' } }")
-let $personNodeArray := fn:string-join($personNodeStrings, ",")
+    for $personId in map:keys($people)
+    let $person := map:get($people, $personId)
+    let $personName := map:get($person, "name")
+    let $mbox := map:get($person, "mbox")
+    let $tip := fn:concat($personId, ", ", $mbox)
+    return fn:concat("{ group: 'nodes', data: { id: '", $personName, "', personId: '", $personId, "', ring: 2, tip: '", $tip, "' } }")
 let $personNodeInsertScript := fn:concat("
-            cy.add([", $personNodeArray, "]);
+            cy.add([", fn:string-join($personNodeStrings, ","), "]);
             var layout = cy.makeLayout({
               name: 'circle',
               levelWidth: function() {
@@ -31,7 +62,7 @@ let $personNodeInsertScript := fn:concat("
             });
             layout.run();
                cy.elements().qtip({ 
-                  content: function(){ return this._private.data.tip }, 
+                  content: function(){ return this._private.data.tip}, 
                   position: { 
                       my: 'top center', 
                       at: 'bottom center' 
