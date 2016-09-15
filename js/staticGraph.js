@@ -11,12 +11,12 @@ var cy = cytoscape({
     { data: { id: 'Maria', ring: 1 } },
     { data: { id: 'CarlChild1', source: 'Carl', predicate:'HasASon', target: 'Phil' } },
     { data: { id: 'PhillipChild1', source: 'Phillip', predicate:'HasADaughter', target: 'Shari' } },
-    { data: { id: 'PhilSpouse', source: 'Phil', predicate:'IsMarriedTo', target: 'Shari' } },
-    { data: { id: 'ShariSpouse', source: 'Shari', predicate:'IsMarriedTo', target: 'Phil' } },
+    { data: { id: 'PhilSpouse', source: 'Phil', predicate:'IsMarriedTo', target: 'Shari' }, classes: 'foobar' },
+    { data: { id: 'ShariSpouse', source: 'Shari', predicate:'IsMarriedTo', target: 'Phil' }, classes: 'foobar' },
     { data: { id: 'PhilChild1', source: 'Phil', predicate:'HasASon', target: 'Joshua' } },
     { data: { id: 'PhilChild2', source: 'Phil', predicate:'HasADaughter', target: 'Maria' } },
     { data: { id: 'ShariChild1', source: 'Shari', predicate:'HasASon', target: 'Joshua' } },
-    { data: { id: 'ShariChild2', source: 'Shari', predicate:'HasADaughter', target: 'Maria' } }
+    { data: { id: 'ShariChild2', source: 'Shari', predicate:'HasADaughter', target: 'Maria' }  }
   ],
 
   style: [
@@ -40,7 +40,20 @@ var cy = cytoscape({
         'source-label': 'data(predicate)',
         'source-text-offset': 100
       }
-    }
+    },
+    {
+        selector: 'edge.foobar',
+        style: {
+          'width': 1,
+          'line-color': '#C33',
+          'color' : '#C33',
+          'mid-target-arrow-color': '#C33',
+          'mid-target-arrow-shape': 'diamond',
+          'mid-target-arrow-fill': 'filled',
+          'source-label': 'data(predicate)',
+          'source-text-offset': 100
+        }
+      }
   ],
 
   layout: {
