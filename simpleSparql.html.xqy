@@ -12,13 +12,40 @@ let $rootTriples := sem:sparql('
   }
 ')
 
-let $people := sem:sparql('
+let $personBindings := sem:sparql('
   SELECT ?personId ?name
   WHERE {
     ?personId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
     ?personId <http://xmlns.com/foaf/0.1/name> ?name
   }
 ')
+
+let $people := map:map()
+let $_ :=
+    for $personBinding in $personBindings
+    let $personId := map:get($personBinding,"personId")
+    let $person := map:map()
+    let $_ := map:put($person, "name", map:get($personBinding,"name"))
+
+    let $bindings := map:map()
+    let $_ := map:put($bindings, "personId", $personId)
+    let $parents := sem:sparql(
+      '
+        SELECT ?parentId ?name
+        WHERE { 
+          ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
+          ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+        }
+      ',
+      $bindings
+    )
+    let $_ :=
+        if (xdmp:describe($parents) = "()") then
+            ()
+        else map:put($person, "parents", map:get($parents, "parentId"))
+
+    return map:put($people, $personId, $person)
+let $_ := xdmp:log(("$people",$people))
 
 return
 (
@@ -45,8 +72,8 @@ return
           <div>
             <table>
                 {
-                    for $person in $people
-                    return <tr><td>{map:get($person,"personId")}</td><td>{map:get($person,"name")}</td></tr>
+                    for $personBinding in $personBindings
+                    return <tr><td>{map:get($personBinding,"personId")}</td><td>{map:get($personBinding,"name")}</td></tr>
                 }
             </table>
           </div>
@@ -54,23 +81,16 @@ return
           <div>
             <table>
                 {
-                    for $person in $people
+                    for $personId in map:keys($people)
+                    let $person := map:get($people, $personId)
                     let $personName := map:get($person, "name")
-                    let $personId := map:get($person, "personId")
                     let $bindings := map:map()
                     let $_ := map:put($bindings, "personId", $personId)
-                    let $parents := sem:sparql(
-                        '
-                            SELECT ?parentId ?name
-                            WHERE { 
-                                ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
-                                ?parentId <http://xmlns.com/foaf/0.1/name> ?name
-                            }
-                        ',
-                        $bindings
-                    )
-                    for $parent in $parents
-                    return <tr><td>{map:get($parent, "name")}</td><td>-></td><td>{$personName}</td></tr>
+                    let $_ := xdmp:log(("$personId",$personId, $person, map:get($person, "parents")))
+                    let $parentIds := map:get($person, "parents")
+                    for $parentId in $parentIds
+                    let $parent := map:get($people, $parentId)
+                    return <tr><td>{map:get($parent,"name")}</td><td>-></td><td>{$personName}</td></tr>
                 }
             </table>
           </div>
