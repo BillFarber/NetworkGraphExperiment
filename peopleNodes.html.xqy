@@ -50,18 +50,16 @@ let $personNodeStrings :=
     let $personName := map:get($person, "name")
     let $mbox := map:get($person, "mbox")
     let $tip := fn:concat($personId, ", ", $mbox)
-    return fn:concat("{ group: 'nodes', data: { id: '", $personName, "', personId: '", $personId, "', ring: 2, tip: '", $tip, "' } }")
+    return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: 2, tip: '", $tip, "', label: '", $personName, "' } }")
 
 let $childOfEdgeStrings :=
     for $personId in map:keys($people)
     let $person := map:get($people, $personId)
-    let $personName := map:get($person, "name")
     let $parentIds := map:get($person, "parents")
     for $parentId in $parentIds
-    let $parent := map:get($people, $parentId)
-    let $parentName := map:get($parent,"name")
-    let $childOfNodeId := fn:replace(fn:concat($personName, " ChildOf ", $parentName), " ", "_")
-    return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentName, "', predicate:'Parent Of', target: '", $personName, "' } }")
+    let $childOfNodeId := fn:replace(fn:concat($personId, " ChildOf ", $parentId), " ", "_")
+    let $tip := "is a parent of "
+    return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentId, "', predicate:'Parent Of', target: '", $personId, "', tip: '", $tip, "' } }")
 
 let $spouseBindings := sem:sparql('
   SELECT ?personId ?spouseId
@@ -78,12 +76,9 @@ let $_ :=
 let $spouseOfEdgeStrings :=
     for $personId in map:keys($spouses)
     let $spouseId := map:get($spouses, $personId)
-    let $person := map:get($people, $personId)
-    let $personName := map:get($person, "name")
-    let $spouse := map:get($people, $spouseId)
-    let $spouseName := map:get($spouse, "name")
-    let $spouseOfNodeId := fn:replace(fn:concat($personName, " SpouseOf ", $spouseName), " ", "_")
-    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $personName, "', predicate:'', target: '", $spouseName, "' }, classes: 'foobar' }")
+    let $spouseOfNodeId := fn:replace(fn:concat($personId, " SpouseOf ", $spouseId), " ", "_")
+    let $tip := "is married to"
+    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $personId, "', predicate:'', target: '", $spouseId, "', tip: '", $tip, "' }, classes: 'foobar' }")
 
 let $personNodeInsertScript := fn:concat("
             cy.add([", fn:string-join(($personNodeStrings, $childOfEdgeStrings, $spouseOfEdgeStrings), ","), "]);

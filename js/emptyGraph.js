@@ -10,7 +10,7 @@ var cy = cytoscape({
       style: {
         'background-color': '#C33',
         'color': '#C33',
-        'label': 'data(id)'
+        'label': 'data(label)'
       }
     },
     {
