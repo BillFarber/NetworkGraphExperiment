@@ -126,7 +126,7 @@ return
                     let $person := map:get($people, $personId)
                     let $personName := map:get($person, "name")
                     let $spouse := map:get($people, $spouseId)
-                    let $spouseName := map:get($person, "name")
+                    let $spouseName := map:get($spouse, "name")
                     return <tr><td>{$personName}</td><td>&lt;&gt;</td><td>{$spouseName}</td></tr>
                 }
             </table>
