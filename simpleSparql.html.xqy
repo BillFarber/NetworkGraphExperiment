@@ -57,6 +57,19 @@ let $_ :=
     return map:put($people, $personId, $person)
 let $_ := xdmp:log(("$people",$people))
 
+let $spouseBindings := sem:sparql('
+  SELECT ?personId ?spouseId
+  WHERE {
+    ?personId <http://purl.org/vocab/relationship/spouseOf> ?spouseId
+  }
+')
+let $spouses := map:map()
+let $_ :=
+    for $spouseBinding in $spouseBindings
+    let $personId := map:get($spouseBinding,"personId")
+    let $spouseId := map:get($spouseBinding,"spouseId")
+    return map:put($spouses, $personId, $spouseId)
+
 return
 (
   xdmp:set-response-content-type("text/html"),
@@ -101,6 +114,20 @@ return
                     for $parentId in $parentIds
                     let $parent := map:get($people, $parentId)
                     return <tr><td>{map:get($parent,"name")}</td><td>-></td><td>{$personName}</td></tr>
+                }
+            </table>
+          </div>
+          <p><b>Spouse Links:</b></p>
+          <div>
+            <table>
+                {
+                    for $personId in map:keys($spouses)
+                    let $spouseId := map:get($spouses, $personId)
+                    let $person := map:get($people, $personId)
+                    let $personName := map:get($person, "name")
+                    let $spouse := map:get($people, $spouseId)
+                    let $spouseName := map:get($person, "name")
+                    return <tr><td>{$personName}</td><td>&lt;&gt;</td><td>{$spouseName}</td></tr>
                 }
             </table>
           </div>
