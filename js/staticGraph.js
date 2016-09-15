@@ -3,12 +3,12 @@ var cy = cytoscape({
   container: document.getElementById('cytoscape-container'),
 
   elements: [
-    { data: { id: 'Carl', ring: 8 } },
-    { data: { id: 'Phil', ring: 4 } },
-    { data: { id: 'Phillip', ring: 8 } },
-    { data: { id: 'Shari', ring: 4 } },
-    { data: { id: 'Joshua', ring: 1 } },
-    { data: { id: 'Maria', ring: 1 } },
+    { data: { id: 'Carl', ring: 8, label: 'C' } },
+    { data: { id: 'Phil', ring: 4, label: 'P' } },
+    { data: { id: 'Phillip', ring: 8, label: 'Pl' } },
+    { data: { id: 'Shari', ring: 4, label: 'S' } },
+    { data: { id: 'Joshua', ring: 1, label: 'Jo' } },
+    { data: { id: 'Maria', ring: 1, label: 'M' } },
     { data: { id: 'CarlChild1', source: 'Carl', predicate:'HasASon', target: 'Phil' } },
     { data: { id: 'PhillipChild1', source: 'Phillip', predicate:'HasADaughter', target: 'Shari' } },
     { data: { id: 'PhilSpouse', source: 'Phil', predicate:'IsMarriedTo', target: 'Shari' }, classes: 'foobar' },
@@ -25,7 +25,7 @@ var cy = cytoscape({
       style: {
         'background-color': '#C33',
         'color': '#C33',
-        'label': 'data(id)'
+        'label': 'data(label)'
       }
     },
     {

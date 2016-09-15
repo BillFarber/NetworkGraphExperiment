@@ -24,8 +24,8 @@ declare option xdmp:mapping "false";
           <script src="js/staticGraph.js"></script>
           <script>{"
             cy.add([
-                { group: 'nodes', data: { id: 'Jacob', ring: 3 } },
-                { group: 'nodes', data: { id: 'Allison', ring: 3 } },
+                { group: 'nodes', data: { id: 'Jacob', ring: 3, label: 'Ja' } },
+                { group: 'nodes', data: { id: 'Allison', ring: 3, label: 'A' } },
                 { group: 'edges', data: { id: 'PhilChild3', source: 'Phil', predicate:'HasASon', target: 'Jacob' } },
                 { group: 'edges', data: { id: 'ShariChild3', source: 'Shari', predicate:'HasASon', target: 'Jacob' } },
                 { group: 'edges', data: { id: 'PhilChild4', source: 'Phil', predicate:'HasADaughter', target: 'Allison' } },
