@@ -25,6 +25,19 @@ var cy = cytoscape({
         'source-label': 'data(predicate)',
         'source-text-offset': 100
       }
+    },
+    {
+      selector: 'edge.foobar',
+      style: {
+        'width': 1,
+        'line-color': '#C33',
+        'color' : '#C33',
+        'mid-target-arrow-color': '#C33',
+        'mid-target-arrow-shape': 'diamond',
+        'mid-target-arrow-fill': 'filled',
+        'source-label': 'data(predicate)',
+        'source-text-offset': 100
+      }
     }
   ],
 

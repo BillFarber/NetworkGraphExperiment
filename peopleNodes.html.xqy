@@ -83,7 +83,7 @@ let $spouseOfEdgeStrings :=
     let $spouse := map:get($people, $spouseId)
     let $spouseName := map:get($spouse, "name")
     let $spouseOfNodeId := fn:replace(fn:concat($personName, " SpouseOf ", $spouseName), " ", "_")
-    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $personName, "', predicate:'Spouse Of', target: '", $spouseName, "' } }")
+    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $personName, "', predicate:'', target: '", $spouseName, "' }, classes: 'foobar' }")
 
 let $personNodeInsertScript := fn:concat("
             cy.add([", fn:string-join(($personNodeStrings, $childOfEdgeStrings, $spouseOfEdgeStrings), ","), "]);
