@@ -26,6 +26,7 @@
         <foaf:family_name>Barber</foaf:family_name>
 
         <rel:childOf rdf:nodeID="Carl_Barber"/>
+        <rel:spouseOf rdf:nodeID="Shari_Barber"/>
     </foaf:Person>
 
 
@@ -38,6 +39,7 @@
         <foaf:family_name>Barber</foaf:family_name>
 
         <rel:childOf>Phillip Norris</rel:childOf>
+        <rel:spouseOf rdf:nodeID="Phil_Barber"/>
     </foaf:Person>
 
 
