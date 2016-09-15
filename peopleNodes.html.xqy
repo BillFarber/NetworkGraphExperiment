@@ -48,8 +48,20 @@ let $personNodeStrings :=
     let $mbox := map:get($person, "mbox")
     let $tip := fn:concat($personId, ", ", $mbox)
     return fn:concat("{ group: 'nodes', data: { id: '", $personName, "', personId: '", $personId, "', ring: 2, tip: '", $tip, "' } }")
+
+let $childOfEdgeStrings :=
+    for $personId in map:keys($people)
+    let $person := map:get($people, $personId)
+    let $personName := map:get($person, "name")
+    let $parentIds := map:get($person, "parents")
+    for $parentId in $parentIds
+    let $parent := map:get($people, $parentId)
+    let $parentName := map:get($parent,"name")
+    let $childOfNodeId := fn:replace(fn:concat($personName, " ChildOf ", $parentName), " ", "_")
+    return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentName, "', predicate:'Parent Of', target: '", $personName, "' } }")
+
 let $personNodeInsertScript := fn:concat("
-            cy.add([", fn:string-join($personNodeStrings, ","), "]);
+            cy.add([", fn:string-join(($personNodeStrings, $childOfEdgeStrings), ","), "]);
             var layout = cy.makeLayout({
               name: 'circle',
               levelWidth: function() {
