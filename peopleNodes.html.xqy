@@ -36,8 +36,11 @@ let $_ :=
     let $_ :=
         if (xdmp:describe($parents) = "()") then
             ()
-        else map:put($person, "parents", map:get($parents, "parentId"))
-
+        else
+            let $parentIds :=
+                for $parent in $parents
+                return map:get($parent, "parentId")
+            return map:put($person, "parents", $parentIds)
     return map:put($people, $personId, $person)
 let $_ := xdmp:log(("$people",$people))
 
