@@ -4,13 +4,19 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 
 declare option xdmp:mapping "false";
 
-let $rootSubject := "http://billfarber.org/family/Phil Barber"
-let $rootTriples := sem:sparql('
-  SELECT ?pred ?obj
-  WHERE { 
-    <http://billfarber.org/family/Phil\u0020Barber> ?pred ?obj
-  }
-')
+let $rootSubject := "Phil Barber"
+let $bindings := map:map()
+let $_ := map:put($bindings, "rootSubject", $rootSubject)
+let $rootTriples := sem:sparql(
+    '
+        SELECT ?pred ?obj
+        WHERE {
+            ?subject <http://xmlns.com/foaf/0.1/name> ?rootSubject .
+            ?subject ?pred ?obj
+        }
+    ',
+    $bindings
+)
 
 let $personBindings := sem:sparql('
   SELECT ?personId ?name
@@ -42,7 +48,11 @@ let $_ :=
     let $_ :=
         if (xdmp:describe($parents) = "()") then
             ()
-        else map:put($person, "parents", map:get($parents, "parentId"))
+        else
+            let $parentIds :=
+                for $parent in $parents
+                return map:get($parent, "parentId")
+            return map:put($person, "parents", $parentIds)
 
     return map:put($people, $personId, $person)
 let $_ := xdmp:log(("$people",$people))
