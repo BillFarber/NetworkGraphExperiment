@@ -4,7 +4,8 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 
 declare option xdmp:mapping "false";
 
-let $rootSubject := "Shari Barber"
+let $defaultRootSubject := "Shari Barber"
+let $rootSubject := xdmp:get-request-field("personId", $defaultRootSubject)
 
 let $bindings := map:map()
 let $_ := map:put($bindings, "rootSubject", $rootSubject)
@@ -100,19 +101,32 @@ let $personNodeStrings :=
     for $personId in map:keys($people)
     let $person := map:get($people, $personId)
     let $personName := map:get($person, "name")
+    let $ring :=
+        if ($personName = $rootSubject) then
+            15
+        else 1
     let $mbox := map:get($person, "mbox")
     let $tip := fn:concat($personId, ", ", $mbox)
-    return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: 2, tip: '", $tip, "', label: '", $personName, "' } }")
+    return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: ", $ring, ", tip: '", $tip, "', label: '", $personName, "' } }")
+
+let $childOfEdgeStrings :=
+    for $personId in map:keys($people)
+    let $person := map:get($people, $personId)
+    let $parentIds := map:get($person, "parents")
+    for $parentId in $parentIds
+    let $childOfNodeId := fn:replace(fn:concat($personId, " ChildOf ", $parentId), " ", "_")
+    let $tip := "is a parent of "
+    return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentId, "', predicate:'Parent Of', target: '", $personId, "', tip: '", $tip, "' } }")
 
 let $personNodeInsertScript := fn:concat("
-            cy.add([", fn:string-join(($personNodeStrings), ","), "]);
+            cy.add([", fn:string-join(($personNodeStrings,$childOfEdgeStrings), ","), "]);
             var layout = cy.makeLayout({
-              name: 'circle',
+              name: 'concentric',
+              fit: true,
               levelWidth: function() {
-                return 4;
+                return 2;
               },
               concentric: function( node ){
-                console.log(node._private.data.ring);
                 return node._private.data.ring;
               }
             });
@@ -144,7 +158,7 @@ return
   "<!DOCTYPE html>",
   <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-      <title>Person Nodes</title>
+      <title>{ fn:concat("Person Centered (", $rootSubject, ")") }</title>
       <link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/qtip2/2.2.0/jquery.qtip.css" />
       <style type="text/css">{'
         #cytoscape-container {
