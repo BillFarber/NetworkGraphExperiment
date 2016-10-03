@@ -97,6 +97,22 @@ let $_ :=
 
     return map:put($people, $personId, $person)
 
+let $bindings := map:map()
+let $_ := map:put($bindings, "personId", $rootPersonId)
+let $spouseBindings := sem:sparql('
+    SELECT ?spouseId
+    WHERE {
+        ?personId <http://purl.org/vocab/relationship/spouseOf> ?spouseId
+    }',
+    $bindings
+)
+let $spouseOfEdgeStrings :=
+    for $spouseBinding in $spouseBindings
+    let $spouseId := map:get($spouseBinding,"spouseId")
+    let $spouseOfNodeId := fn:replace(fn:concat($rootPersonId, " SpouseOf ", $spouseId), " ", "_")
+    let $tip := "is married to"
+    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $rootPersonId, "', predicate:'', target: '", $spouseId, "', tip: '", $tip, "' }, classes: 'foobar' }")
+
 let $personNodeStrings :=
     for $personId in map:keys($people)
     let $person := map:get($people, $personId)
@@ -119,7 +135,7 @@ let $childOfEdgeStrings :=
     return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentId, "', predicate:'Parent Of', target: '", $personId, "', tip: '", $tip, "' } }")
 
 let $personNodeInsertScript := fn:concat("
-            cy.add([", fn:string-join(($personNodeStrings,$childOfEdgeStrings), ","), "]);
+            cy.add([", fn:string-join(($personNodeStrings, $childOfEdgeStrings, $spouseOfEdgeStrings), ","), "]);
             var layout = cy.makeLayout({
               name: 'concentric',
               fit: true,
