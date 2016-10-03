@@ -147,26 +147,31 @@ let $personNodeInsertScript := fn:concat("
               }
             });
             layout.run();
-               cy.elements().qtip({ 
-                  content: function(){ return this._private.data.tip}, 
-                  position: { 
-                      my: 'top center', 
-                      at: 'bottom center' 
-                  }, 
-                  style: { 
-                      classes: 'qtip-green qtip-rounded', 
-                      tip: { 
-                          width: 16, 
-                          height: 8 
-                  }},
-                  hide: {
+            cy.on('click', function(evt){
+                var target = evt.cyTarget._private.data.label;
+                console.log( 'navigate to: ' + target);
+                window.location.href = '/personCentered.html.xqy?personName=' + target;
+            });
+            cy.elements().qtip({ 
+                content: function(){ return this._private.data.tip}, 
+                position: { 
+                    my: 'top center', 
+                    at: 'bottom center' 
+                }, 
+                style: { 
+                    classes: 'qtip-green qtip-rounded', 
+                    tip: { 
+                        width: 16, 
+                        height: 8 
+                }},
+                hide: {
                     event: 'mouseout'
-                  },
-                  show: {
+                },
+                show: {
                     event: 'mouseover'
-                  }
-              }); 
-          ")
+                }
+            });
+        ")
 
 return
 (
