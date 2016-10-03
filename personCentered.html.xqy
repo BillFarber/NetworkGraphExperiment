@@ -5,13 +5,13 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 declare option xdmp:mapping "false";
 
 let $defaultRootSubject := "Shari Barber"
-let $rootSubject := xdmp:get-request-field("personId", $defaultRootSubject)
+let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
 
 let $bindings := map:map()
 let $_ := map:put($bindings, "rootSubject", $rootSubject)
 let $personBindings := sem:sparql(
     '
-        SELECT ?personId ?name ?mbox
+        SELECT ?personId ?mbox
         WHERE {
             ?personId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
             ?personId <http://xmlns.com/foaf/0.1/name> ?rootSubject .
@@ -20,10 +20,10 @@ let $personBindings := sem:sparql(
     ',
     $bindings
 )
+let $rootPersonId := map:get($personBindings,"personId")
 
 let $people := map:map()
 
-let $rootPersonId := map:get($personBindings,"personId")
 let $rootPerson := map:map()
 let $_ := map:put($rootPerson, "name", $rootSubject)
 let $_ := map:put($rootPerson, "mbox", map:get($personBindings,"mbox"))
