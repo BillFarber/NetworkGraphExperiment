@@ -55,6 +55,57 @@ declare function local:add-parents-to-person($person as map:map) as empty-sequen
   return ()
 };
 
+declare function local:find-all-people-with-relationships($rootPersonId as sem:blank) as item()* {
+  let $bindings := map:map()
+  let $_ := map:put($bindings, "rootPersonId", $rootPersonId)
+  let $relatedPersonBindings := sem:sparql(
+    '
+      SELECT ?relatedPersonId ?name ?mbox
+      WHERE {
+        ?relatedPersonId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+        ?relatedPersonId <http://xmlns.com/foaf/0.1/name> ?name .
+        ?relatedPersonId <http://xmlns.com/foaf/0.1/mbox> ?mbox
+
+        {?relatedPersonId ?predicate ?rootPersonId }
+        UNION
+        {?rootPersonId ?predicate ?relatedPersonId }
+      }
+    ',
+    $bindings
+  )
+  return $relatedPersonBindings
+};
+
+declare function local:add-related-people-to-people-map($relatedPersonBindings as item()*, $people as map:map) as empty-sequence() {
+  for $relatedPersonBinding in $relatedPersonBindings
+  let $personId := map:get($relatedPersonBinding,"relatedPersonId")
+  let $person := map:map()
+  let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
+  let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
+
+  let $bindings := map:map()
+  let $_ := map:put($bindings, "personId", $personId)
+  let $parents := sem:sparql(
+    '
+      SELECT ?parentId ?name
+      WHERE { 
+        ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
+        ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+      }
+    ',
+    $bindings
+  )
+  let $_ :=
+    if (xdmp:describe($parents) = "()") then
+      ()
+    else
+      let $parentIds :=
+        for $parent in $parents
+        return map:get($parent, "parentId")
+      return map:put($person, "parents", $parentIds)
+  return map:put($people, $personId, $person)
+};
+
 (: ----------- Query Response -------------------- :)
 
 let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
@@ -64,57 +115,10 @@ let $rootPersonId := map:get($rootPerson,"personId")
 let $_ := local:add-parents-to-person($rootPerson)
 let $_ := map:put($people, $rootPersonId, $rootPerson)
 
-let $_ := xdmp:log(("$rootPerson",$rootPerson))
+let $relatedPersonBindings := local:find-all-people-with-relationships($rootPersonId)
+let $_ := local:add-related-people-to-people-map($relatedPersonBindings, $people)
 
 
-
-
-let $bindings := map:map()
-let $_ := map:put($bindings, "rootPersonId", $rootPersonId)
-let $relatedPersonBindings := sem:sparql(
-    '
-        SELECT ?relatedPersonId ?name ?mbox
-        WHERE {
-            ?relatedPersonId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
-            ?relatedPersonId <http://xmlns.com/foaf/0.1/name> ?name .
-            ?relatedPersonId <http://xmlns.com/foaf/0.1/mbox> ?mbox
-
-            {?relatedPersonId ?predicate ?rootPersonId }
-            UNION
-            {?rootPersonId ?predicate ?relatedPersonId }
-        }
-    ',
-    $bindings
-)
-let $_ :=
-    for $relatedPersonBinding in $relatedPersonBindings
-    let $personId := map:get($relatedPersonBinding,"relatedPersonId")
-    let $person := map:map()
-    let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
-    let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
-
-    let $bindings := map:map()
-    let $_ := map:put($bindings, "personId", $personId)
-    let $parents := sem:sparql(
-      '
-        SELECT ?parentId ?name
-        WHERE { 
-          ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
-          ?parentId <http://xmlns.com/foaf/0.1/name> ?name
-        }
-      ',
-      $bindings
-    )
-    let $_ :=
-        if (xdmp:describe($parents) = "()") then
-            ()
-        else
-            let $parentIds :=
-                for $parent in $parents
-                return map:get($parent, "parentId")
-            return map:put($person, "parents", $parentIds)
-
-    return map:put($people, $personId, $person)
 
 let $bindings := map:map()
 let $_ := map:put($bindings, "personId", $rootPersonId)
