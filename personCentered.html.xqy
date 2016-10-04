@@ -35,7 +35,8 @@ let $parents := sem:sparql(
     SELECT ?parentId ?name
     WHERE { 
       ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
-      ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+      ?parentId <http://xmlns.com/foaf/0.1/name> ?name .
+      ?personId <http://xmlns.com/foaf/0.1/mbox> ?mbox
     }
   ',
   $bindings
@@ -56,10 +57,11 @@ let $bindings := map:map()
 let $_ := map:put($bindings, "rootPersonId", $rootPersonId)
 let $relatedPersonBindings := sem:sparql(
     '
-        SELECT ?relatedPersonId ?name
+        SELECT ?relatedPersonId ?name ?mbox
         WHERE {
             ?relatedPersonId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
-            ?relatedPersonId <http://xmlns.com/foaf/0.1/name> ?name
+            ?relatedPersonId <http://xmlns.com/foaf/0.1/name> ?name .
+            ?relatedPersonId <http://xmlns.com/foaf/0.1/mbox> ?mbox
 
             {?relatedPersonId ?predicate ?rootPersonId }
             UNION
@@ -73,7 +75,8 @@ let $_ :=
     let $personId := map:get($relatedPersonBinding,"relatedPersonId")
     let $person := map:map()
     let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
-
+    let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
+let $_ := xdmp:log(("$person",$person))
     let $bindings := map:map()
     let $_ := map:put($bindings, "personId", $personId)
     let $parents := sem:sparql(
