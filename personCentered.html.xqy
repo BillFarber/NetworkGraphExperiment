@@ -4,52 +4,68 @@ import module namespace sem = "http://marklogic.com/semantics" at "/MarkLogic/se
 
 declare option xdmp:mapping "false";
 
-let $defaultRootSubject := "Shari Barber"
-let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
+declare variable $people as map:map := map:map();
+declare variable $defaultRootSubject as xs:string := "Shari Barber";
 
-let $bindings := map:map()
-let $_ := map:put($bindings, "rootSubject", $rootSubject)
-let $personBindings := sem:sparql(
+(: ----------- Local Functions -------------------- :)
+
+declare function local:build-person-from-name($person-name as xs:string) as map:map {
+  let $bindings := map:map()
+  let $_ := map:put($bindings, "rootSubject", $person-name)
+  let $personBindings := sem:sparql(
     '
-        SELECT ?personId ?mbox
-        WHERE {
-            ?personId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
-            ?personId <http://xmlns.com/foaf/0.1/name> ?rootSubject .
-            ?personId <http://xmlns.com/foaf/0.1/mbox> ?mbox
-        }
+      SELECT ?personId ?mbox
+      WHERE {
+        ?personId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
+        ?personId <http://xmlns.com/foaf/0.1/name> ?rootSubject .
+        ?personId <http://xmlns.com/foaf/0.1/mbox> ?mbox
+      }
     ',
     $bindings
-)
-let $rootPersonId := map:get($personBindings,"personId")
+  )
+  let $rootPersonId := map:get($personBindings,"personId")
+  let $rootPerson := map:map()
+  let $_ := map:put($rootPerson, "name", $person-name)
+  let $_ := map:put($rootPerson, "personId", $rootPersonId)
+  let $_ := map:put($rootPerson, "mbox", map:get($personBindings,"mbox"))
+  return $rootPerson
+};
 
-let $people := map:map()
-
-let $rootPerson := map:map()
-let $_ := map:put($rootPerson, "name", $rootSubject)
-let $_ := map:put($rootPerson, "mbox", map:get($personBindings,"mbox"))
-
-let $bindings := map:map()
-let $_ := map:put($bindings, "personId", $rootPersonId)
-let $parents := sem:sparql(
-  '
-    SELECT ?parentId ?name
-    WHERE { 
-      ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
-      ?parentId <http://xmlns.com/foaf/0.1/name> ?name .
-      ?personId <http://xmlns.com/foaf/0.1/mbox> ?mbox
-    }
-  ',
-  $bindings
-)
-let $_ :=
+declare function local:add-parents-to-person($person as map:map) as empty-sequence() {
+  let $bindings := map:map()
+  let $_ := map:put($bindings, "personId", map:get($person,"personId"))
+  let $parents := sem:sparql(
+    '
+      SELECT ?parentId ?name
+      WHERE { 
+        ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
+        ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+      }
+    ',
+    $bindings
+  )
+  let $_ :=
     if (xdmp:describe($parents) = "()") then
-        ()
+      ()
     else
-        let $parentIds :=
-            for $parent in $parents
-            return map:get($parent, "parentId")
-        return map:put($rootPerson, "parents", $parentIds)
+      let $parentIds :=
+        for $parent in $parents
+        return map:get($parent, "parentId")
+      return map:put($person, "parents", $parentIds)
+  return ()
+};
+
+(: ----------- Query Response -------------------- :)
+
+let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
+
+let $rootPerson := local:build-person-from-name($rootSubject)
+let $rootPersonId := map:get($rootPerson,"personId")
+let $_ := local:add-parents-to-person($rootPerson)
 let $_ := map:put($people, $rootPersonId, $rootPerson)
+
+let $_ := xdmp:log(("$rootPerson",$rootPerson))
+
 
 
 
@@ -76,7 +92,7 @@ let $_ :=
     let $person := map:map()
     let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
     let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
-let $_ := xdmp:log(("$person",$person))
+
     let $bindings := map:map()
     let $_ := map:put($bindings, "personId", $personId)
     let $parents := sem:sparql(
