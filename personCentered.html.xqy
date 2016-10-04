@@ -106,6 +106,18 @@ declare function local:add-related-people-to-people-map($relatedPersonBindings a
   return map:put($people, $personId, $person)
 };
 
+declare function local:find-spouse($rootPersonId as sem:blank) as item()* {
+  let $bindings := map:map()
+  let $_ := map:put($bindings, "personId", $rootPersonId)
+  return sem:sparql('
+    SELECT ?spouseId
+    WHERE {
+      ?personId <http://purl.org/vocab/relationship/spouseOf> ?spouseId
+    }',
+    $bindings
+  )
+};
+
 (: ----------- Query Response -------------------- :)
 
 let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
@@ -118,17 +130,7 @@ let $_ := map:put($people, $rootPersonId, $rootPerson)
 let $relatedPersonBindings := local:find-all-people-with-relationships($rootPersonId)
 let $_ := local:add-related-people-to-people-map($relatedPersonBindings, $people)
 
-
-
-let $bindings := map:map()
-let $_ := map:put($bindings, "personId", $rootPersonId)
-let $spouseBindings := sem:sparql('
-    SELECT ?spouseId
-    WHERE {
-        ?personId <http://purl.org/vocab/relationship/spouseOf> ?spouseId
-    }',
-    $bindings
-)
+let $spouseBindings := local:find-spouse($rootPersonId)
 let $spouseOfEdgeStrings :=
     for $spouseBinding in $spouseBindings
     let $spouseId := map:get($spouseBinding,"spouseId")
