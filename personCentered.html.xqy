@@ -40,10 +40,11 @@ declare function local:add-parents-to-person($person as map:map) as empty-sequen
   let $_ := map:put($bindings, "personId", map:get($person,"personId"))
   let $parents := sem:sparql(
     '
-      SELECT ?parentId ?name
+      SELECT ?parentId ?name ?mbox
       WHERE { 
         ?personId <http://purl.org/vocab/relationship/childOf> ?parentId .
-        ?parentId <http://xmlns.com/foaf/0.1/name> ?name
+        ?parentId <http://xmlns.com/foaf/0.1/name> ?name .
+        ?relatedPersonId <http://xmlns.com/foaf/0.1/mbox> ?mbox
       }
     ',
     $bindings
@@ -54,7 +55,13 @@ declare function local:add-parents-to-person($person as map:map) as empty-sequen
     else
       let $parentIds :=
         for $parent in $parents
-        return map:get($parent, "parentId")
+        let $parentId := map:get($parent, "parentId")
+        let $parentPerson := map:map()
+        let $_ := map:put($parentPerson, "name", map:get($parent,"name"))
+        let $_ := map:put($parentPerson, "mbox", map:get($parent,"mbox"))
+        let $_ := map:put($parentPerson, "relationship", "parent")
+        let $_ := map:put($people, $parentId, $parentPerson)
+        return $parentId
       return map:put($person, "parents", $parentIds)
   return ()
 };
@@ -86,7 +93,7 @@ declare function local:add-related-people-to-people-map($relatedPersonBindings a
   let $person := map:map()
   let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
   let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
-  let $_ := 
+  let $_ :=
     if (map:get($relatedPersonBinding,"relationship") = "http://purl.org/vocab/relationship/childOf") then
       map:put($person, "relationship", "child")
     else if (map:get($relatedPersonBinding,"relationship") = "http://purl.org/vocab/relationship/spouseOf") then
@@ -114,7 +121,11 @@ declare function local:add-related-people-to-people-map($relatedPersonBindings a
         for $parent in $parents
         return map:get($parent, "parentId")
       return map:put($person, "parents", $parentIds)
-  return map:put($people, $personId, $person)
+  let $_ := xdmp:log(("adding person", $person))
+  return
+    if (map:contains($people, $personId)) then
+      ()
+    else map:put($people, $personId, $person)
 };
 
 declare function local:find-spouse($rootPersonId as sem:blank?) as item()* {
