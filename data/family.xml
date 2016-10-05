@@ -17,6 +17,18 @@
     </foaf:Person>
 
 
+    <foaf:Person rdf:nodeID="Ruth_Barber">
+        <foaf:name>Ruth Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:barlcarber@yahoo.com" />
+        <foaf:gender>Female</foaf:gender>
+        <foaf:title>Mrs</foaf:title>
+        <foaf:givenname>Ruth</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf>Ken Benshoff</rel:childOf>
+    </foaf:Person>
+
+
     <foaf:Person rdf:nodeID="Phil_Barber">
         <foaf:name>Phil Barber</foaf:name>
         <foaf:mbox rdf:resource="mailto:phil.barber@marklogic.com" />
@@ -26,6 +38,7 @@
         <foaf:family_name>Barber</foaf:family_name>
 
         <rel:childOf rdf:nodeID="Carl_Barber"/>
+        <rel:childOf rdf:nodeID="Ruth_Barber"/>
         <rel:spouseOf rdf:nodeID="Shari_Barber"/>
     </foaf:Person>
 
@@ -49,6 +62,45 @@
         <foaf:gender>Male</foaf:gender>
         <foaf:title>Mr</foaf:title>
         <foaf:givenname>Joshua</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf rdf:nodeID="Phil_Barber"/>
+        <rel:childOf rdf:nodeID="Shari_Barber"/>
+    </foaf:Person>
+
+
+    <foaf:Person rdf:nodeID="Jacob_Barber">
+        <foaf:name>Jacob Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:barbershopthegreat@yahoo.com" />
+        <foaf:gender>Male</foaf:gender>
+        <foaf:title>Mr</foaf:title>
+        <foaf:givenname>Jacob</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf rdf:nodeID="Phil_Barber"/>
+        <rel:childOf rdf:nodeID="Shari_Barber"/>
+    </foaf:Person>
+
+
+    <foaf:Person rdf:nodeID="Maria_Barber">
+        <foaf:name>Maria Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:clarinetchick@ymail.com" />
+        <foaf:gender>Female</foaf:gender>
+        <foaf:title>Miss</foaf:title>
+        <foaf:givenname>Maria</foaf:givenname>
+        <foaf:family_name>Barber</foaf:family_name>
+
+        <rel:childOf rdf:nodeID="Phil_Barber"/>
+        <rel:childOf rdf:nodeID="Shari_Barber"/>
+    </foaf:Person>
+
+
+    <foaf:Person rdf:nodeID="Allison_Barber">
+        <foaf:name>Allison Barber</foaf:name>
+        <foaf:mbox rdf:resource="mailto:littlebitnurse@gmail.com" />
+        <foaf:gender>Female</foaf:gender>
+        <foaf:title>Miss</foaf:title>
+        <foaf:givenname>Allison</foaf:givenname>
         <foaf:family_name>Barber</foaf:family_name>
 
         <rel:childOf rdf:nodeID="Phil_Barber"/>
