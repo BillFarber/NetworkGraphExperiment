@@ -64,15 +64,15 @@ declare function local:find-all-people-with-relationships($rootPersonId as sem:b
   let $_ := map:put($bindings, "rootPersonId", $rootPersonId)
   let $relatedPersonBindings := sem:sparql(
     '
-      SELECT ?relatedPersonId ?name ?mbox
+      SELECT ?relatedPersonId ?name ?mbox ?relationship
       WHERE {
         ?relatedPersonId <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> <http://xmlns.com/foaf/0.1/Person> .
         ?relatedPersonId <http://xmlns.com/foaf/0.1/name> ?name .
         ?relatedPersonId <http://xmlns.com/foaf/0.1/mbox> ?mbox
 
-        {?relatedPersonId ?predicate ?rootPersonId }
+        {?relatedPersonId ?relationship ?rootPersonId }
         UNION
-        {?rootPersonId ?predicate ?relatedPersonId }
+        {?rootPersonId ?relationship ?relatedPersonId }
       }
     ',
     $bindings
@@ -86,6 +86,13 @@ declare function local:add-related-people-to-people-map($relatedPersonBindings a
   let $person := map:map()
   let $_ := map:put($person, "name", map:get($relatedPersonBinding,"name"))
   let $_ := map:put($person, "mbox", map:get($relatedPersonBinding,"mbox"))
+  let $_ := 
+    if (map:get($relatedPersonBinding,"relationship") = "http://purl.org/vocab/relationship/childOf") then
+      map:put($person, "relationship", "child")
+    else if (map:get($relatedPersonBinding,"relationship") = "http://purl.org/vocab/relationship/spouseOf") then
+      map:put($person, "relationship", "spouse")
+    else
+      map:put($person, "relationship", "other")
 
   let $bindings := map:map()
   let $_ := map:put($bindings, "personId", $personId)
@@ -127,6 +134,7 @@ declare function local:find-spouse($rootPersonId as sem:blank?) as item()* {
 let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
 
 let $rootPerson := local:build-person-from-name($rootSubject)
+let $_ := map:put($rootPerson, "relationship", "self")
 let $rootPersonId :=
   if ( map:get($rootPerson,"personId") ) then
     let $rootPersonId := map:get($rootPerson,"personId")
@@ -147,6 +155,8 @@ let $spouseBindings := local:find-spouse($rootPersonId)
 let $spouseOfEdgeStrings :=
   for $spouseBinding in $spouseBindings
   let $spouseId := map:get($spouseBinding,"spouseId")
+  let $spousePerson := map:get($people, $spouseId)
+  let $_ := map:put($spousePerson, "relationship", "spouse")
   let $spouseOfNodeId := fn:replace(fn:concat($rootPersonId, " SpouseOf ", $spouseId), " ", "_")
   let $tip := "is married to"
   return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $rootPersonId, "', predicate:'', target: '", $spouseId, "', tip: '", $tip, "' }, classes: 'foobar' }")
@@ -155,10 +165,17 @@ let $personNodeStrings :=
   for $personId in map:keys($people)
   let $person := map:get($people, $personId)
   let $personName := map:get($person, "name")
+  let $relationship := map:get($person, "relationship")
   let $ring :=
-    if ($personName = $rootSubject) then
-      15
-    else 1
+    if ($relationship = "self") then
+      31
+    else
+      if ($relationship = "spouse") then
+        15
+      else
+        if ($relationship = "child") then
+          7
+        else 1
   let $mbox := map:get($person, "mbox")
   let $tip := fn:concat($personId, ", ", $mbox)
   return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: ", $ring, ", tip: '", $tip, "', label: '", $personName, "' } }")
