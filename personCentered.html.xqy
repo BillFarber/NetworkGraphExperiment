@@ -23,12 +23,16 @@ declare function local:build-person-from-name($person-name as xs:string) as map:
     ',
     $bindings
   )
-  let $rootPersonId := map:get($personBindings,"personId")
-  let $rootPerson := map:map()
-  let $_ := map:put($rootPerson, "name", $person-name)
-  let $_ := map:put($rootPerson, "personId", $rootPersonId)
-  let $_ := map:put($rootPerson, "mbox", map:get($personBindings,"mbox"))
-  return $rootPerson
+  return
+    if (xdmp:describe($personBindings) = "()") then
+      map:map()
+    else
+      let $rootPersonId := map:get($personBindings,"personId")
+      let $rootPerson := map:map()
+      let $_ := map:put($rootPerson, "name", $person-name)
+      let $_ := map:put($rootPerson, "personId", $rootPersonId)
+      let $_ := map:put($rootPerson, "mbox", map:get($personBindings,"mbox"))
+      return $rootPerson
 };
 
 declare function local:add-parents-to-person($person as map:map) as empty-sequence() {
@@ -106,7 +110,7 @@ declare function local:add-related-people-to-people-map($relatedPersonBindings a
   return map:put($people, $personId, $person)
 };
 
-declare function local:find-spouse($rootPersonId as sem:blank) as item()* {
+declare function local:find-spouse($rootPersonId as sem:blank?) as item()* {
   let $bindings := map:map()
   let $_ := map:put($bindings, "personId", $rootPersonId)
   return sem:sparql('
@@ -123,41 +127,50 @@ declare function local:find-spouse($rootPersonId as sem:blank) as item()* {
 let $rootSubject := xdmp:get-request-field("personName", $defaultRootSubject)
 
 let $rootPerson := local:build-person-from-name($rootSubject)
-let $rootPersonId := map:get($rootPerson,"personId")
-let $_ := local:add-parents-to-person($rootPerson)
-let $_ := map:put($people, $rootPersonId, $rootPerson)
+let $rootPersonId :=
+  if ( map:get($rootPerson,"personId") ) then
+    let $rootPersonId := map:get($rootPerson,"personId")
+    let $_ := local:add-parents-to-person($rootPerson)
+    let $_ := map:put($people, $rootPersonId, $rootPerson)
+    return $rootPersonId
+  else
+    ()
 
-let $relatedPersonBindings := local:find-all-people-with-relationships($rootPersonId)
+let $relatedPersonBindings :=
+  if ($rootPersonId) then
+    local:find-all-people-with-relationships($rootPersonId)
+  else
+    ()
 let $_ := local:add-related-people-to-people-map($relatedPersonBindings, $people)
 
 let $spouseBindings := local:find-spouse($rootPersonId)
 let $spouseOfEdgeStrings :=
-    for $spouseBinding in $spouseBindings
-    let $spouseId := map:get($spouseBinding,"spouseId")
-    let $spouseOfNodeId := fn:replace(fn:concat($rootPersonId, " SpouseOf ", $spouseId), " ", "_")
-    let $tip := "is married to"
-    return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $rootPersonId, "', predicate:'', target: '", $spouseId, "', tip: '", $tip, "' }, classes: 'foobar' }")
+  for $spouseBinding in $spouseBindings
+  let $spouseId := map:get($spouseBinding,"spouseId")
+  let $spouseOfNodeId := fn:replace(fn:concat($rootPersonId, " SpouseOf ", $spouseId), " ", "_")
+  let $tip := "is married to"
+  return fn:concat("{ group: 'edges', data: { id: '", $spouseOfNodeId, "', source: '", $rootPersonId, "', predicate:'', target: '", $spouseId, "', tip: '", $tip, "' }, classes: 'foobar' }")
 
 let $personNodeStrings :=
-    for $personId in map:keys($people)
-    let $person := map:get($people, $personId)
-    let $personName := map:get($person, "name")
-    let $ring :=
-        if ($personName = $rootSubject) then
-            15
-        else 1
-    let $mbox := map:get($person, "mbox")
-    let $tip := fn:concat($personId, ", ", $mbox)
-    return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: ", $ring, ", tip: '", $tip, "', label: '", $personName, "' } }")
+  for $personId in map:keys($people)
+  let $person := map:get($people, $personId)
+  let $personName := map:get($person, "name")
+  let $ring :=
+    if ($personName = $rootSubject) then
+      15
+    else 1
+  let $mbox := map:get($person, "mbox")
+  let $tip := fn:concat($personId, ", ", $mbox)
+  return fn:concat("{ group: 'nodes', data: { id: '", $personId, "', ring: ", $ring, ", tip: '", $tip, "', label: '", $personName, "' } }")
 
 let $childOfEdgeStrings :=
-    for $personId in map:keys($people)
-    let $person := map:get($people, $personId)
-    let $parentIds := map:get($person, "parents")
-    for $parentId in $parentIds
-    let $childOfNodeId := fn:replace(fn:concat($personId, " ChildOf ", $parentId), " ", "_")
-    let $tip := "is a parent of "
-    return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentId, "', predicate:'Parent Of', target: '", $personId, "', tip: '", $tip, "' } }")
+  for $personId in map:keys($people)
+  let $person := map:get($people, $personId)
+  let $parentIds := map:get($person, "parents")
+  for $parentId in $parentIds
+  let $childOfNodeId := fn:replace(fn:concat($personId, " ChildOf ", $parentId), " ", "_")
+  let $tip := "is a parent of "
+  return fn:concat("{ group: 'edges', data: { id: '", $childOfNodeId, "', source: '", $parentId, "', predicate:'Parent Of', target: '", $personId, "', tip: '", $tip, "' } }")
 
 let $personNodeInsertScript := fn:concat("
             cy.add([", fn:string-join(($personNodeStrings, $childOfEdgeStrings, $spouseOfEdgeStrings), ","), "]);
@@ -216,6 +229,7 @@ return
       <meta charset="UTF-8"/>
     </head>
     <body>
+        <div><h3>Root Person ID: { if ($rootPersonId) then $rootPersonId else fn:concat($rootSubject, " not found") }</h3></div>
         <div>
           <div id="cytoscape-container"></div>
           <script src="lib/jquery-1.7.1.min.js"></script>
